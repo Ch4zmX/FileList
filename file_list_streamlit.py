@@ -2,16 +2,29 @@ import os
 import argparse
 import logging
 import csv
-import sys
+import threading
 import time
 import win32api
 import win32con
 import streamlit as st
 from datetime import datetime
+from tkinter import Tk, filedialog
+from threading import  Thread
+from mttkinter import mtTkinter as tk
+
 
 def streamlit_log(line):
+	logging.info(line)
 	st.text(line)
-	return line
+
+def folder_picker():
+	root = tk.Tk()
+	root.withdraw()
+	root.attributes("-topmost", True)
+	path = tk.filedialog.askdirectory()
+
+	return path
+
 
 def combine_file_paths(path,file_input):
 	file_paths = []
@@ -24,12 +37,12 @@ def combine_file_paths(path,file_input):
 				for line in f.readlines():
 					file_paths.append(str(line).strip().replace('"', ""))
 		except Exception as e:
-			logging.error(streamlit_log(str(datetime.now())+": " + "Error opening file: "+str(e)))
+			(streamlit_log(str(datetime.now())+": " + "Error opening file: "+str(e)))
 	else:
 		if path != None and len(path) > 0:
 			file_paths.append(path)
 		else:
-			logging.error(streamlit_log(str(datetime.now())+": " + "Path or file input not passed! Please try again"))
+			(streamlit_log(str(datetime.now())+": " + "Path or file input not passed! Please try again"))
 	return file_paths
 
 def main(path, folderonly, filter, max_depth, file_input):
@@ -46,14 +59,14 @@ def main(path, folderonly, filter, max_depth, file_input):
 		filter_exists = True
 
 	if path == None and file_input == None:
-		logging.error(streamlit_log(str(datetime.now())+": " + "Path argument or file input not passed. Please try again."))
+		(streamlit_log(str(datetime.now())+": " + "Path argument or file input not passed. Please try again."))
 		quit()
 	if len(file_paths) == 0:
-		logging.error(streamlit_log(str(datetime.now())+": " + "No folders to parse were passed. Check if arguments were passed or if file input is empty."))
+		(streamlit_log(str(datetime.now())+": " + "No folders to parse were passed. Check if arguments were passed or if file input is empty."))
 	else:
-		logging.info(streamlit_log(str(datetime.now())+": " + "Folder(s) to parse: "))
+		(streamlit_log(str(datetime.now())+": " + "Folder(s) to parse: "))
 		for path in file_paths:
-			logging.info(streamlit_log(str(datetime.now())+": " + path))
+			(streamlit_log(str(datetime.now())+": " + path))
 	print("\n")
 	def get_files_in_directory(path, count=0):
 
@@ -88,7 +101,7 @@ def main(path, folderonly, filter, max_depth, file_input):
 
 			except Exception as e:
 
-				logging.error(streamlit_log(str(datetime.now())+": " + "Error checking item "+item+": "+str(e)))
+				(streamlit_log(str(datetime.now())+": " + "Error checking item "+item+": "+str(e)))
 
 		return files
 
@@ -106,16 +119,16 @@ def main(path, folderonly, filter, max_depth, file_input):
 
 	files = []
 	for fpath in file_paths:
-		logging.info(streamlit_log(str(datetime.now())+": " + "Parsing all files in path "+fpath+"..."))
+		(streamlit_log(str(datetime.now())+": " + "Parsing all files in path "+fpath+"..."))
 		try:
 
 			files += get_files_in_directory(fpath)
 		except Exception as e:
-			logging.error(streamlit_log(str(datetime.now())+": " + "Error checking path "+fpath+": "+str(e)))
+			(streamlit_log(str(datetime.now())+": " + "Error checking path "+fpath+": "+str(e)))
 
 	half_time = time.time()
-	logging.info(streamlit_log(str(datetime.now())+": Finished parsing files in "+str(half_time-start_time)+" seconds"))
-	logging.info(streamlit_log(str(datetime.now())+": Writing filenames to csv file..."))
+	(streamlit_log(str(datetime.now())+": Finished parsing files in "+str(half_time-start_time)+" seconds"))
+	(streamlit_log(str(datetime.now())+": Writing filenames to csv file..."))
 
 	if not os.path.exists("file_list.csv"):
 		stats = open("file_list.csv", "w", encoding="utf-8", newline="")
@@ -143,7 +156,7 @@ def main(path, folderonly, filter, max_depth, file_input):
 
 					writer.writerow({"file_name": file, "file_date": time.strftime('%m/%d/%Y :: %H:%M:%S', time.gmtime(os.path.getmtime(file))), "file_size_bytes": os.stat(file).st_size, "file_extension": str(os.path.splitext(file)[1].lower())})
 			except Exception as e:
-				logging.error(streamlit_log(str(datetime.now())+": " + "Error writing file "+str(file)+" to csv: "+str(e)))
+				(streamlit_log(str(datetime.now())+": " + "Error writing file "+str(file)+" to csv: "+str(e)))
 	else:
 		stats = open("file_list.csv", "w", encoding="utf-8", newline="")
 		writer = csv.DictWriter(stats, fieldnames=["file_path"])
@@ -152,10 +165,10 @@ def main(path, folderonly, filter, max_depth, file_input):
 			try:
 				writer.writerow({"file_path": file})
 			except Exception as e:
-				logging.error(streamlit_log(str(datetime.now())+": " + "Error writing file "+str(file)+" to csv: "+str(e)))
+				(streamlit_log(str(datetime.now())+": " + "Error writing file "+str(file)+" to csv: "+str(e)))
 	end_time = time.time()
-	logging.info(streamlit_log(str(datetime.now())+": " + str(len(files))+" files written to file_list.csv in "+str(round(end_time-half_time, 3))+" seconds. \n"))
-	logging.info(streamlit_log(str(datetime.now()) + ": Total time taken: " + str(round(end_time - start_time, 3)) + " seconds. \n"))
+	(streamlit_log(str(datetime.now())+": " + str(len(files))+" files written to file_list.csv in "+str(round(end_time-half_time, 3))+" seconds. \n"))
+	(streamlit_log(str(datetime.now()) + ": Total time taken: " + str(round(end_time - start_time, 3)) + " seconds. \n"))
 
 	with open("file_list.csv", encoding="utf-8") as f:
 		csv_text = f.read() + '\n'
@@ -173,7 +186,24 @@ def main(path, folderonly, filter, max_depth, file_input):
 st.set_page_config(layout="wide", page_title="File List")
 
 st.header("Parsing the requested folder:")
-path = st.text_input("Enter the path of the folder to parse:")
+
+
+btn1, btn2, btn3 = st.columns(3)
+
+with btn1:
+	path_btn = st.button("Choose path", key="path")
+
+with btn2:
+	start = st.button("Start", key="start"
+					  )
+with btn3:
+	stop = st.button("Stop", key="stop")
+
+
+
+
+
+
 folderonly = st.checkbox(label="Folder Only", key="folder_only", value=False, help="Only parse the names of the folders in the given directory, not the file names")
 
 filter = st.radio("Filters", options=["None", "Readonly", "Hidden"], index=0, horizontal=True, help='Readonly: Only parses files that have the "readonly" attribute. Hidden: Only parses files that have the "hidden" attribute').lower()
@@ -189,14 +219,12 @@ if max_depth == "Infinite":
 	max_depth = None
 
 file_input = st.file_uploader(label="Upload List of Paths", help="Upload a file with a list of paths to parse, seperated by newlines")
-btn1, btn2 = st.columns(2)
 
-with btn1:
-	start = st.button("Start", key="start"
-					  )
-with btn2:
-	stop = st.button("Stop", key="stop")
-
+if path_btn:
+	t = threading.Thread(target=folder_picker())
+	t.setDaemon(True)
+	t.start()
+	t.root.quit()
 
 if(start):
 	file_paths = combine_file_paths(path, file_input)

@@ -1,0 +1,2 @@
+streamlit run D:\Documents\Programming\Python\Caminosoft\file_list\file_list_streamlit.py
+streamlit run D:\Documents\Programming\Python\Caminosoft\file_list\file_list_streamlit.py -- --path D:\Documents
